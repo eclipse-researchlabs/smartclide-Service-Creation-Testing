@@ -2,9 +2,11 @@ package mainPack;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -15,12 +17,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 
 public class GenerateClass {
-
-
-
-
 	
-	public void cloneProject(String repoUrl) {
+	String srcPath;
+	String projectClonePath;
+	
+	public ResultObject start(String repoUrl) {
+		
+		if(!cloneProject(repoUrl)) {
+			return new ResultObject(1, "Could not clone project from the URL: "+repoUrl);
+		}
+		
+		findSourceFolder();
+		
+		return new ResultObject(0, "Ola kala");
+	}
+	
+	private boolean cloneProject(String repoUrl) {
 		
 		//new directory creation
 		String folder_name = repoUrl.replaceAll("[^A-Za-z0-9]","");
@@ -32,26 +44,49 @@ public class GenerateClass {
 		
 		if(!flag) {
 			System.out.println("could not create folder");
-			return;
+			return false;
 		}
 		
 		String cloneDirectoryPath = "./"+folder_name; // Ex.in windows c:\\gitProjects\SpringBootMongoDbCRUD\
+		System.out.println("Clone path: "+cloneDirectoryPath);
+		this.projectClonePath = cloneDirectoryPath;
 		try {
-		    System.out.println("Cloning "+repoUrl+" into "+repoUrl);
+		    System.out.println("Cloning "+repoUrl+" into "+cloneDirectoryPath);
 		    Git.cloneRepository()
 		        .setURI(repoUrl)
 		        .setDirectory(Paths.get(cloneDirectoryPath).toFile())
 		        .call();
 		    System.out.println("Completed Cloning");
+		    return true;
 		} catch (GitAPIException e) {
 		    System.out.println("Exception occurred while cloning repo");
 			deleteDir(clone_folder);
 		    e.printStackTrace();
+		    return false;
 		}
 
-		//deleteDir(clone_folder);
 	}
 
+	public boolean findSourceFolder() {
+		
+		File clone_folder = new File(this.projectClonePath);
+
+		String[] directories = clone_folder.list(new FilenameFilter() {
+		  @Override
+		  public boolean accept(File current, String name) {
+		    return new File(current, name).isDirectory();
+		  }
+		});
+		
+		System.out.println(Arrays.toString(directories));
+		
+		return true;
+	}
+	
+	public void fetchMethods(String sourceFilePath) {
+		MethodFinder mdfndr = new MethodFinder();
+		mdfndr.find(sourceFilePath);
+	}
 
 	private void deleteDir(File file) {
 	    File[] contents = file.listFiles();
@@ -67,9 +102,21 @@ public class GenerateClass {
 		System.out.println("Deleted folder: "+file.getName()+"...");
 	}
 	
-	public boolean isWindows() {
-		return System.getProperty("os.name").toLowerCase().contains("win");
-	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	//---------------------------------------------------------------------------------------------------------------------------
