@@ -24,7 +24,7 @@ public class MainClass {
 		
 		GenerateClass test = new GenerateClass();
 		test.start(repoURL);
-		test.fetchMethods(sourceFilePath);
+		//test.fetchMethods(sourceFilePath);
 	}
 	
 

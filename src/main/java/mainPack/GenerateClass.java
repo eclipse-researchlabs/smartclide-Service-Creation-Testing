@@ -18,7 +18,9 @@ import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 
 public class GenerateClass {
 	
+	Git gitProject;
 	String srcPath;
+	String cloneFolderName;
 	String projectClonePath;
 	
 	public ResultObject start(String repoUrl) {
@@ -29,16 +31,20 @@ public class GenerateClass {
 		
 		findSourceFolder();
 		
+		gitProject.getRepository().close();
+		File clone_folder = new File(this.cloneFolderName);
+		deleteDir(clone_folder);
+		System.out.println("Ola kala!!!");
 		return new ResultObject(0, "Ola kala");
 	}
 	
 	private boolean cloneProject(String repoUrl) {
-		
 		//new directory creation
 		String folder_name = repoUrl.replaceAll("[^A-Za-z0-9]","");
 		folder_name += "_cloned";
 
 		System.out.println("Creating new folder...");
+		this.cloneFolderName = folder_name;
 		File clone_folder = new File(folder_name);
 		boolean flag = clone_folder.mkdir();
 		
@@ -52,7 +58,7 @@ public class GenerateClass {
 		this.projectClonePath = cloneDirectoryPath;
 		try {
 		    System.out.println("Cloning "+repoUrl+" into "+cloneDirectoryPath);
-		    Git.cloneRepository()
+		    this.gitProject = Git.cloneRepository()
 		        .setURI(repoUrl)
 		        .setDirectory(Paths.get(cloneDirectoryPath).toFile())
 		        .call();
@@ -67,10 +73,13 @@ public class GenerateClass {
 
 	}
 
-	public boolean findSourceFolder() {
+	private boolean findSourceFolder() {
 		
 		File clone_folder = new File(this.projectClonePath);
 
+		
+		
+		//--------------------------------------------------------------------------
 		String[] directories = clone_folder.list(new FilenameFilter() {
 		  @Override
 		  public boolean accept(File current, String name) {
@@ -81,6 +90,23 @@ public class GenerateClass {
 		System.out.println(Arrays.toString(directories));
 		
 		return true;
+	}
+	
+	private String[] getDirectories(String folderPath) {
+		File folder = new File(folderPath);
+
+		String[] directories = folder.list(new FilenameFilter() {
+		  @Override
+		  public boolean accept(File current, String name) {
+		    return new File(current, name).isDirectory();
+		  }
+		});
+		return directories;
+	}
+	
+	//Checks if folder with folderName exists in the startFolderPath
+	private boolean findFolder(String startFolderPath ,String folderName) {
+		return Arrays.stream(getDirectories(startFolderPath)).anyMatch(folderName::equals);
 	}
 	
 	public void fetchMethods(String sourceFilePath) {
@@ -97,9 +123,14 @@ public class GenerateClass {
 	            }
 	        }
 	    }
-	    file.delete();
+	    
+	    String delFolderName = file.getName();
+	    boolean isDir = file.isDirectory();
+	    if(!file.delete()) {
+	    	System.out.println("Could not delete folder: "+delFolderName);
+	    	System.out.println("is Directory: "+isDir);
+	    }
 
-		System.out.println("Deleted folder: "+file.getName()+"...");
 	}
 	
 	
