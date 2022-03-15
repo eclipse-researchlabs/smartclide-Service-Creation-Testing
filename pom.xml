@@ -45,6 +45,13 @@
 	    <version>4.8.0.201706111038-r</version>
 	</dependency>
 
+	<!-- https://mvnrepository.com/artifact/net.sourceforge.javydreamercsw/randoop -->
+	<dependency>
+	    <groupId>net.sourceforge.javydreamercsw</groupId>
+	    <artifactId>randoop</artifactId>
+	    <version>1.3.2</version>
+	</dependency>
+
 </dependencies>
 
 </project>
