@@ -45,12 +45,13 @@
 	    <version>4.8.0.201706111038-r</version>
 	</dependency>
 
-	<!-- https://mvnrepository.com/artifact/net.sourceforge.javydreamercsw/randoop -->
+	<!-- https://mvnrepository.com/artifact/org.apache.maven.shared/maven-invoker -->
 	<dependency>
-	    <groupId>net.sourceforge.javydreamercsw</groupId>
-	    <artifactId>randoop</artifactId>
-	    <version>1.3.2</version>
+	    <groupId>org.apache.maven.shared</groupId>
+	    <artifactId>maven-invoker</artifactId>
+	    <version>3.0.1</version>
 	</dependency>
+
 
 </dependencies>
 

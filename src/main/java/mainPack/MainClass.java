@@ -22,7 +22,7 @@ public class MainClass {
 		String sourceFilePath = "main/java/uom/smartclide/structurecreation/controller/EndpointController.java";
 		String repoURL = "https://github.com/eclipse-researchlabs/smartclide-service-creation";
 		
-		GenerateClass test = new GenerateClass();
+		MainFlow test = new MainFlow();
 		test.start(repoURL);
 		//test.fetchMethods(sourceFilePath);
 	}

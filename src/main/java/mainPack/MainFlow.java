@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 
-public class GenerateClass {
+public class MainFlow {
 
 	Git gitProject;
 	String srcPath;
