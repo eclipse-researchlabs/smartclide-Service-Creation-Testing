@@ -10,14 +10,29 @@ import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 
+import utils.ProjectUtils;
+
 public class TestGenerationFlow {
 
 	
-	public ResultObject start(String pathToProject, String pathToPomXML) throws MavenInvocationException {
+	public ResultObject start(String pathToProjectFolder, String pathToPomXML) throws MavenInvocationException {
 		
-		ResultObject mavenCmd = mavenCleanInstall(pathToProject, pathToPomXML);
+		//ResultObject mavenCmd = mavenCleanInstall(pathToProjectFolder, pathToPomXML);
 		
 		
+		String targetFolder = ProjectUtils.findFolderPath(pathToProjectFolder, "target");
+		if(targetFolder==null) {
+			System.out.println("***Could not find 'target' folder in the project after maven 'clean install'");
+			return new ResultObject(1, "Could not find 'target' folder in the project after maven 'clean install'");
+		}
+		System.out.println("project 'target' folder path: " + targetFolder);
+		
+		String tempfilename= "smartclide-service-creation-0.0.1-SNAPSHOT.jar";
+		String filePath = ProjectUtils.findFilePath(targetFolder, tempfilename);
+		if(targetFolder==null) {
+			System.out.println("Could not find 'target' folder in the project after maven 'clean install'");
+			return new ResultObject(1, "Could not find 'target' folder in the project after maven 'clean install'");
+		}
 		
 		return new ResultObject(0, "***ola kala!!!");
 	}

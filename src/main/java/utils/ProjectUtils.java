@@ -5,17 +5,40 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ProjectUtils {
 	
-	private String findFolder(String statingFolderPath, String folderName) {
+	public static String findFilePath(String statingFolderPath, String fileName) {
+		
+		File startingFolder = new File(statingFolderPath);
+
+		File[] matches = startingFolder.listFiles(new FilenameFilter()
+		{
+		  public boolean accept(File dir, String name)
+		  {
+			return name.equals(fileName);
+		  }
+		});
+
+		if(matches.length!=1) {
+			return null;
+		}
+		
+		System.out.println(Arrays.toString(matches));
+		
+		return "ok";
+	}
+
+	
+	public static String findFolderPath(String statingFolderPath, String folderName) {
 
 		File clone_folder = new File(statingFolderPath);
 		
 		return findFolderByNamePerLevel(clone_folder, folderName);
 	}
 	
-	private String findFolderByNamePerLevel(File root, String searchName) {
+	private static String findFolderByNamePerLevel(File root, String searchName) {
 		String folderPath = root.getAbsolutePath();
 		List<String> nextLevel = new ArrayList<String>();
 		String[] fileNames = getDirectories(root);
@@ -27,7 +50,7 @@ public class ProjectUtils {
 
 	}
 	
-	private String findFolderByNamePerLevelRecurse(List<String> folders, String searchName) {
+	private static String findFolderByNamePerLevelRecurse(List<String> folders, String searchName) {
 		
 		List<String> nextLevel = new ArrayList<String>();
 		
@@ -55,7 +78,7 @@ public class ProjectUtils {
 		return null;
 	}
 	
-	private String[] getDirectories(File folder) {
+	private static String[] getDirectories(File folder) {
 		String[] directories = folder.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File current, String name) {

@@ -11,6 +11,8 @@ import java.util.List;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import utils.ProjectUtils;
+
 public class MainFlow {
 
 	Git gitProject;
@@ -19,13 +21,15 @@ public class MainFlow {
 	String projectClonePath;
 
 	public ResultObject start(String repoUrl) {
+		
+//		this.projectClonePath = "C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned";
 
 		if(!cloneProject(repoUrl)) {
 			return new ResultObject(1, "Could not clone project from the given URL: "+repoUrl);
 		}
 		System.out.println("Project root folder path: "+this.projectClonePath);
-
-		this.srcPath = findFolder(this.projectClonePath, "src");
+		
+		this.srcPath = ProjectUtils.findFolderPath(this.projectClonePath, "src");
 		if(this.srcPath==null) {
 			return new ResultObject(1, "Could not find 'src' folder in the project from the given URL: "+repoUrl);
 		}
@@ -85,65 +89,6 @@ public class MainFlow {
 
 	}
 
-	private String findFolder(String statingFolderPath, String folderName) {
-
-		File clone_folder = new File(statingFolderPath);
-		
-		return findFolderByNamePerLevel(clone_folder, folderName);
-	}
-	
-	private String findFolderByNamePerLevel(File root, String searchName) {
-		String folderPath = root.getAbsolutePath();
-		List<String> nextLevel = new ArrayList<String>();
-		String[] fileNames = getDirectories(root);
-		Arrays.asList(fileNames).forEach(fileName -> {
-			nextLevel.add(folderPath+File.separator+fileName);
-	    });
-		
-		return findFolderByNamePerLevelRecurse(nextLevel, searchName);
-
-	}
-	
-	private String findFolderByNamePerLevelRecurse(List<String> folders, String searchName) {
-		
-		List<String> nextLevel = new ArrayList<String>();
-		
-		for(String folderPath : folders) {
-			System.out.println("checking : "+folderPath);
-			File root = new File(folderPath);
-			if (root.getName().equals(searchName)) {
-				return root.getAbsolutePath();
-			}
-			
-			String[] fileNames = getDirectories(root);
-			if(fileNames==null || fileNames.length==0) {
-				continue;
-			}
-			Arrays.asList(fileNames).forEach(fileName -> {
-				nextLevel.add(folderPath+File.separator+fileName);
-		    });
-		}
-
-		if(nextLevel.size()!=0) {
-			System.out.println("To next level");
-			return findFolderByNamePerLevelRecurse(nextLevel, searchName);
-		}
-		
-		return null;
-	}
-	
-	private String[] getDirectories(File folder) {
-		String[] directories = folder.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File current, String name) {
-				return new File(current, name).isDirectory();
-			}
-		});
-		return directories;
-	}
-
-
-	
 	
 
 	public void fetchMethods(String sourceFilePath) {
