@@ -13,19 +13,23 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 public class TestGenerationFlow {
 
 	
-	public ResultObject start() {
+	public ResultObject start(String pathToProject, String pathToPomXML) throws MavenInvocationException {
+		
+		ResultObject mavenCmd = mavenCleanInstall(pathToProject, pathToPomXML);
 		
 		
 		
 		return new ResultObject(0, "***ola kala!!!");
 	}
 	
-	private ResultObject mavenCleanInstall(String pathToPomXML) throws MavenInvocationException {
+	private ResultObject mavenCleanInstall(String pathToProject, String pathToPomXML) throws MavenInvocationException {
 		InvocationRequest request = new DefaultInvocationRequest();
 		request.setPomFile( new File( pathToPomXML ) );
 		request.setGoals( Arrays.asList( "clean", "install" ) );
 
 		Invoker invoker = new DefaultInvoker();
+		invoker.setLocalRepositoryDirectory(new File(pathToProject));
+		invoker.setMavenHome(new File(System.getenv("MAVEN_HOME")));
 		InvocationResult invRes = invoker.execute( request );
 
 		if(invRes.getExitCode()!=0) {

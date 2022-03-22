@@ -1,9 +1,7 @@
 package mainPack;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -12,11 +10,6 @@ import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
 
 public class MainFlow {
 
@@ -32,14 +25,21 @@ public class MainFlow {
 		}
 		System.out.println("Project root folder path: "+this.projectClonePath);
 
-		if(!findSourceFolder()) {
+		this.srcPath = findFolder(this.projectClonePath, "src");
+		if(this.srcPath==null) {
 			return new ResultObject(1, "Could not find 'src' folder in the project from the given URL: "+repoUrl);
 		}
 		System.out.println("Project source folder path: "+this.srcPath);
-
 		
-		
-		
+		TestGenerationFlow genFLow = new TestGenerationFlow();
+		try {
+			genFLow.start(this.projectClonePath, this.projectClonePath+File.separator+"pom.xml");
+			System.out.println("maven flow done....");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("exception during maven flow....");
+			e.printStackTrace();
+		}
 		
 		
 		//-----------------------------------------------------------------------------------------------------------
@@ -85,17 +85,11 @@ public class MainFlow {
 
 	}
 
-	private boolean findSourceFolder() {
+	private String findFolder(String statingFolderPath, String folderName) {
 
-		File clone_folder = new File(this.projectClonePath);
-
-		this.srcPath = findFolderByNamePerLevel(clone_folder, "src");
-
-		if(this.srcPath == null) {
-			return false;
-		}
+		File clone_folder = new File(statingFolderPath);
 		
-		return true;
+		return findFolderByNamePerLevel(clone_folder, folderName);
 	}
 	
 	private String findFolderByNamePerLevel(File root, String searchName) {
@@ -137,36 +131,6 @@ public class MainFlow {
 		
 		return null;
 	}
-
-
-	// finds a folder given the root dir and the name of the folder to search
-	private String findFolderByName(File root, String searchName)	{
-		
-		if (root.getName().equals(searchName)) {
-			return root.getAbsolutePath();
-		}
-		
-		String[] fileNames = getDirectories(root);
-		
-		if(fileNames != null) {
-			for (String folderName : fileNames) {
-				File f = new File(root.getAbsolutePath(), folderName);
-				String ret = findFolderByName(f, searchName);
-				if (ret == null) {
-					continue;
-				} else { //folder found
-					return ret;
-				}
-			}
-		}
-		return null;
-	}
-	
-	
-	//Checks if folder with folderName exists in the startFolderPath
-	private boolean containsFolderName(String startFolderPath ,String folderName) {
-		return Arrays.stream(getDirectories(new File(startFolderPath))).anyMatch(folderName::equals);
-	}
 	
 	private String[] getDirectories(File folder) {
 		String[] directories = folder.list(new FilenameFilter() {
@@ -179,6 +143,8 @@ public class MainFlow {
 	}
 
 
+	
+	
 
 	public void fetchMethods(String sourceFilePath) {
 		MethodFinder mdfndr = new MethodFinder();
