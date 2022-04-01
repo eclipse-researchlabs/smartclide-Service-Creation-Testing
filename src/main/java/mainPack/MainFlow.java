@@ -21,9 +21,7 @@ public class MainFlow {
 	String projectClonePath;
 
 	public ResultObject start(String repoUrl) {
-		
-//		this.projectClonePath = "C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned";
-
+	
 		if(!cloneProject(repoUrl)) {
 			return new ResultObject(1, "Could not clone project from the given URL: "+repoUrl);
 		}
@@ -37,10 +35,9 @@ public class MainFlow {
 		
 		TestGenerationFlow genFLow = new TestGenerationFlow();
 		try {
-			genFLow.start(this.projectClonePath, this.projectClonePath+File.separator+"pom.xml");
+			genFLow.start(this.projectClonePath);
 			System.out.println("maven flow done....");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			System.out.println("exception during maven flow....");
 			e.printStackTrace();
 		}
