@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,53 +37,7 @@ import utils.ProjectUtils;
 
 public class TestGenerationFlow {
 
-	public void test() {
-
-		//		String pathtToPomXML="C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned\\pom.xml";
-		//		
-		//		try {
-		//			System.out.println(getJarPackageNameFromPom(pathtToPomXML));
-		//		} catch (Exception e) {
-		//			// TODO Auto-generated catch block
-		//			System.out.println("exception at test....");
-		//			e.printStackTrace();
-		//		}
-
-
-
-
-
-
-		//*** test ************************************************************************************************************
-		String pathToProjectFolder ="C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned";
-		String targetFolder ="C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned\\target";
-		String pathToPomXML = pathToProjectFolder+File.separator+"pom.xml";
-
-
-		//*** test temp
-
-		String targetClassFolder ="C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned\\target\\classes";
-		try {
-			String temp = createClassListFile(targetClassFolder, "C:\\Users\\Maik\\Documents\\GitHub\\unit_test_generation\\httpsgithubcomeclipseresearchlabssmartclideservicecreation_cloned\\smartCLIDE-workFolder", "classList.txt");
-			System.out.println("Path to list: "+temp);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-
-
-	}
-	private void executeRandoop() throws IOException {
-		//results to src/test/java
-		ProcessBuilder pb = new ProcessBuilder("java", "-jar", "your.jar");
-		pb.directory(new File("preferred/working/directory"));
-		Process p = pb.start();
-
-	}
-
-	public ResultObject start(String pathToProjectFolder) throws MavenInvocationException, SAXException, IOException, ParserConfigurationException {
+	public ResultObject start(String pathToProjectFolder, String pathToWorkDir) throws MavenInvocationException, SAXException, IOException, ParserConfigurationException {
 		String pathToPomXML = pathToProjectFolder+File.separator+"pom.xml";
 		//executing maven clean package for the cloned project
 		if(!mavenCleanPackage(pathToProjectFolder, pathToPomXML)) {
@@ -98,20 +53,20 @@ public class TestGenerationFlow {
 		System.out.println("project 'target' folder path: " + targetFolder);
 
 		//copying classes (after maven build) from the target folder to a new one
-		boolean result = copyFolderToDestination(targetFolder+File.separator+"classes", pathToProjectFolder+File.separator+"smartCLIDE-workFolder");
+		boolean result = copyFolderToDestination(targetFolder+File.separator+"classes", pathToWorkDir+File.separator+"smartCLIDE_workFolder");
 		if(!result) {
 			System.out.println("*** failed to copy classes");
 			return new ResultObject(1, "Could not copy classes from the project's target folder");
 		}
 
 		//try and extract all the dependencies of the project, in order to generate the tests
-		if(!extractProjectDependencies(pathToPomXML, pathToProjectFolder, targetFolder)) {
+		if(!extractProjectDependencies(pathToPomXML, pathToProjectFolder, targetFolder, pathToWorkDir)) {
 			System.out.println("failed to extract the project's dependencies");
 		}
 
 		//create class file list
 		try {
-			String temp = createClassListFile(targetFolder+File.separator+"classes", pathToProjectFolder+File.separator+"smartCLIDE-workFolder", "classList.txt");
+			String temp = createClassListFile(targetFolder+File.separator+"classes", pathToWorkDir, "classList_randoop.txt");
 			System.out.println("Path to list: "+temp);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -120,8 +75,18 @@ public class TestGenerationFlow {
 			e.printStackTrace();
 		}
 
-		//run randoop test generation
-
+		//copy randoop jar to workfolder
+		String pathToRandoopJar = "src"+File.separator+"main"+File.separator+"resources"+File.separator+"randoop-all-4.3.0.jar";
+		Files.copy(new File(pathToRandoopJar).toPath(), new File(pathToWorkDir+File.separator+"randoop-all-4.3.0.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+		
+		//run randoop jar for test generation
+		JarExecutor test = new JarExecutor();
+		try {
+			test.execCmdCommand(pathToWorkDir, pathToWorkDir+File.separator+"smartCLIDE_workFolder;randoop-all-4.3.0.jar");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
 
 
 		return new ResultObject(0, "***ola kala!!!");
@@ -158,16 +123,16 @@ public class TestGenerationFlow {
 		return file.toAbsolutePath().toString();
 	}
 
-	private boolean extractProjectDependencies(String pathToPomXML, String pathToProjectFolder, String targetFolder) {
+	private boolean extractProjectDependencies(String pathToPomXML, String pathToProjectFolder, String targetFolder, String pathToWorkDir) {
 		//extracting the target .jar (after maven build) to a new folder
-		String extractFolder = extractPackagedJarToFolder(pathToPomXML, pathToProjectFolder, targetFolder);
+		String extractFolder = extractPackagedJarToFolder(pathToPomXML, pathToProjectFolder, targetFolder, pathToWorkDir);
 		if(extractFolder==null) {
 			return false;
 		}
 
-		//move jar's org folder to smartCLIDE-workFolder
+		//move jar's org folder to smartCLIDE_workFolder
 		String jarOrgFolder = ProjectUtils.findFolderPath(extractFolder, "org");
-		copyFolderToDestination( jarOrgFolder, pathToProjectFolder+File.separator+"smartCLIDE-workFolder"+File.separator+"org");
+		copyFolderToDestination( jarOrgFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
 
 		//find all BOOT-INF/lib/*.jars
 		String libFolder = ProjectUtils.findFolderPath(extractFolder, "BOOT-INF");
@@ -180,13 +145,13 @@ public class TestGenerationFlow {
 
 		//extract all .jar files from lib folder
 		jarFilePaths.parallelStream().forEach(jarPath ->
-		unzipPackagedJar(pathToProjectFolder+File.separator+"smartCLIDE-workFolder", jarPath)
+		unzipPackagedJar(pathToWorkDir+File.separator+"smartCLIDE_workFolder", jarPath)
 				);
 
 		return true;
 	}
 
-	private String extractPackagedJarToFolder(String pathToPomXML, String pathToProjectFolder, String targetFolder) {
+	private String extractPackagedJarToFolder(String pathToPomXML, String pathToProjectFolder, String targetFolder, String pathToWorkDir) {
 		String jarPackageName;
 		try {
 			jarPackageName = getJarPackageNameFromPom(pathToPomXML);
@@ -203,7 +168,7 @@ public class TestGenerationFlow {
 			return null;
 		}
 		System.out.println("filePath: "+filePath);
-		return unzipPackagedJar(pathToProjectFolder+File.separator+"smartCLIDE-extractedJar", filePath);
+		return unzipPackagedJar(pathToWorkDir+File.separator+"smartCLIDE_extractedJar", filePath);
 	}
 
 	private boolean mavenCleanPackage(String pathToProject, String pathToPomXML) throws MavenInvocationException {
@@ -255,7 +220,7 @@ public class TestGenerationFlow {
 		System.out.println(pathToJar);
 		try {
 			ZipFile zipFile = new ZipFile(pathToJar);
-			//String destinationFolder = baseFolder+File.separator+"smartCLIDE-extractedJar";
+			//String destinationFolder = pathToWorkDir+File.separator+"smartCLIDE_extractedJar";
 			System.out.println("extracting jar to : "+destinationFolder);
 			zipFile.extractAll(destinationFolder);
 			System.out.println("Unzip executed successfully");
