@@ -39,10 +39,11 @@
 	    <version>3.24.0</version>
 	</dependency>
 
+	<!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
 	<dependency>
 	    <groupId>org.eclipse.jgit</groupId>
 	    <artifactId>org.eclipse.jgit</artifactId>
-	    <version>4.8.0.201706111038-r</version>
+	    <version>6.1.0.202203080745-r</version>
 	</dependency>
 
 	<!-- https://mvnrepository.com/artifact/org.apache.maven.shared/maven-invoker -->

@@ -2,12 +2,28 @@ package utils;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+
 public class ProjectUtils {
+	
+	//ProjectUtils.copyFolderToDestination(String sourceFolder, String destinationFolder)
+	public static boolean copyFolderToDestination(String sourceFolder, String destinationFolder) {
+		File srcDir = new File(sourceFolder);
+		File destDir = new File(destinationFolder);
+		try {
+			FileUtils.copyDirectory(srcDir, destDir);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
 	public static String findFilePath(String statingFolderPath, String fileName) {
 		

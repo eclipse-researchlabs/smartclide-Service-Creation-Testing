@@ -53,7 +53,7 @@ public class TestGenerationFlow {
 		System.out.println("project 'target' folder path: " + targetFolder);
 
 		//copying classes (after maven build) from the target folder to a new one
-		boolean result = copyFolderToDestination(targetFolder+File.separator+"classes", pathToWorkDir+File.separator+"smartCLIDE_workFolder");
+		boolean result = ProjectUtils.copyFolderToDestination(targetFolder+File.separator+"classes", pathToWorkDir+File.separator+"smartCLIDE_workFolder");
 		if(!result) {
 			System.out.println("*** failed to copy classes");
 			return new ResultObject(1, "Could not copy classes from the project's target folder");
@@ -132,7 +132,7 @@ public class TestGenerationFlow {
 
 		//move jar's org folder to smartCLIDE_workFolder
 		String jarOrgFolder = ProjectUtils.findFolderPath(extractFolder, "org");
-		copyFolderToDestination( jarOrgFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
+		ProjectUtils.copyFolderToDestination( jarOrgFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
 
 		//find all BOOT-INF/lib/*.jars
 		String libFolder = ProjectUtils.findFolderPath(extractFolder, "BOOT-INF");
@@ -188,19 +188,6 @@ public class TestGenerationFlow {
 
 		return true;
 	}
-
-	private boolean copyFolderToDestination(String sourceFolder, String destinationFolder) {
-		File srcDir = new File(sourceFolder);
-		File destDir = new File(destinationFolder);
-		try {
-			FileUtils.copyDirectory(srcDir, destDir);
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
 
 	private void getFilesFromExtension(String path, List<String> fileList, String fileExtension) {
 		File[] allFiles = new File(path).listFiles();

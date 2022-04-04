@@ -9,7 +9,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.NoWorkTreeException;
 
 import utils.ProjectUtils;
 
@@ -50,14 +53,30 @@ public class MainFlow {
 			e.printStackTrace();
 		}
 		
-		//clean project
-		//copy generated tests into project
+		//reset project
+		System.out.println("Attempting Repo Reset and Clean");
+		try {
+			gitProject.reset().setMode(ResetType.HARD).call();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			gitProject.clean().setForce(true).setCleanDirectories(true).call();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//copy generated tests into project src/test/java (Maven Standard Directory Layout)
+		ProjectUtils.copyFolderToDestination(workDirPath+File.separator+"smartCLIDE_tests", this.srcPath+File.separator+"test"+File.separator+"java"+File.separator+"smartCLIDE_tests");
+		
 		//commit changes
 		
 		//-----------------------------------------------------------------------------------------------------------
 		gitProject.getRepository().close();
-		deleteDir(new File(projectClonePath));
-		deleteDir(new File(workDirPath));
+//		deleteDir(new File(projectClonePath));
+//		deleteDir(new File(workDirPath));
 		System.out.println("Ola kala!!!");
 		return new ResultObject(0, "Ola kala");
 	}
@@ -90,11 +109,13 @@ public class MainFlow {
 					.setURI(repoUrl)
 					.setDirectory(Paths.get(cloneDirectoryPath).toFile())
 					.call();
+			
 			System.out.println("Completed Cloning");
 			return true;
 		} catch (GitAPIException e) {
 			System.out.println("Exception occurred while cloning repo");
-			deleteDir(new File(cloneDirectoryPath));
+			//deleteDir(new File(cloneDirectoryPath));
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -126,19 +147,6 @@ public class MainFlow {
 		}
 
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
