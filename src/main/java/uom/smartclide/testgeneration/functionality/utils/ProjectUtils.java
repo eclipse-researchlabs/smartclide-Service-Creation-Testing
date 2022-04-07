@@ -1,4 +1,4 @@
-package utils;
+package uom.smartclide.testgeneration.functionality.utils;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
@@ -23,6 +22,27 @@ public class ProjectUtils {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public static File[] findFilesStartingWith(String statingFolderPath, String startingString) {
+		
+		File startingFolder = new File(statingFolderPath);
+
+		File[] matches = startingFolder.listFiles(new FilenameFilter()
+		{
+		  public boolean accept(File dir, String name)
+		  {
+			return (name.contains(startingString) && name.endsWith(".jar"));
+		  }
+		});
+
+		if(matches.length<=0) {
+			return null;
+		}
+		
+		System.out.println(Arrays.toString(matches));
+		
+		return matches;
 	}
 	
 	public static String findFilePath(String statingFolderPath, String fileName) {
@@ -48,7 +68,7 @@ public class ProjectUtils {
 
 	
 	public static String findFolderPath(String statingFolderPath, String folderName) {
-
+		System.out.println("Seaerching for: '"+folderName+"', in "+statingFolderPath);
 		File clone_folder = new File(statingFolderPath);
 		
 		return findFolderByNamePerLevel(clone_folder, folderName);

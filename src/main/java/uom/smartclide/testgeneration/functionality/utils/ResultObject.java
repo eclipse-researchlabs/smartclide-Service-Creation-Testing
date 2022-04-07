@@ -1,4 +1,4 @@
-package mainPack;
+package uom.smartclide.testgeneration.functionality.utils;
 
 public class ResultObject {
 	int status;

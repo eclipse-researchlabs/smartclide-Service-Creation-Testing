@@ -1,4 +1,4 @@
-package mainPack;
+package uom.smartclide.testgeneration.functionality.mainFlow;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,13 +10,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -24,16 +22,15 @@ import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.github.javaparser.utils.LineSeparator;
-
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import utils.ProjectUtils;
+import uom.smartclide.testgeneration.functionality.utils.JarExecutor;
+import uom.smartclide.testgeneration.functionality.utils.ProjectUtils;
+import uom.smartclide.testgeneration.functionality.utils.ResultObject;
 
 public class TestGenerationFlow {
 
@@ -59,27 +56,28 @@ public class TestGenerationFlow {
 			return new ResultObject(1, "Could not copy classes from the project's target folder");
 		}
 
-		//try and extract all the dependencies of the project, in order to generate the tests
-		if(!extractProjectDependencies(pathToPomXML, pathToProjectFolder, targetFolder, pathToWorkDir)) {
-			System.out.println("failed to extract the project's dependencies");
-		}
-
 		//create class file list
 		try {
 			String temp = createClassListFile(targetFolder+File.separator+"classes", pathToWorkDir, "classList_randoop.txt");
 			System.out.println("Path to list: "+temp);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-
-			System.out.println("*** failed to create class list");
 			e.printStackTrace();
+			return new ResultObject(1, "Failed to create class list for the project");
+		}
+		
+		//try and extract all the dependencies of the project, in order to generate the tests
+		if(!extractProjectDependencies(pathToPomXML, pathToProjectFolder, targetFolder, pathToWorkDir)) {
+			System.out.println("failed to extract the project's dependencies");
 		}
 
+
 		//copy randoop jar to workfolder
+		System.out.println("locating randoop jar");
 		String pathToRandoopJar = "src"+File.separator+"main"+File.separator+"resources"+File.separator+"randoop-all-4.3.0.jar";
 		Files.copy(new File(pathToRandoopJar).toPath(), new File(pathToWorkDir+File.separator+"randoop-all-4.3.0.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
-		
+
 		//run randoop jar for test generation
+		System.out.println("executing randoop jar");
 		JarExecutor test = new JarExecutor();
 		try {
 			test.execCmdCommand(pathToWorkDir, pathToWorkDir+File.separator+"smartCLIDE_workFolder;randoop-all-4.3.0.jar");
@@ -130,18 +128,27 @@ public class TestGenerationFlow {
 			return false;
 		}
 
+		ProjectUtils.copyFolderToDestination(extractFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder");
+		ProjectUtils.copyFolderToDestination(extractFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
+		
 		//move jar's org folder to smartCLIDE_workFolder
 		String jarOrgFolder = ProjectUtils.findFolderPath(extractFolder, "org");
-		ProjectUtils.copyFolderToDestination( jarOrgFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
+		if(jarOrgFolder!=null) {
+			ProjectUtils.copyFolderToDestination( jarOrgFolder, pathToWorkDir+File.separator+"smartCLIDE_workFolder"+File.separator+"org");
+		}
 
 		//find all BOOT-INF/lib/*.jars
 		String libFolder = ProjectUtils.findFolderPath(extractFolder, "BOOT-INF");
-		libFolder = ProjectUtils.findFolderPath(libFolder, "lib");
-		System.out.println(libFolder);
+		if(libFolder!=null) {
+			libFolder = ProjectUtils.findFolderPath(libFolder, "lib");
+			System.out.println(libFolder);
+		}
 
 		//find all .jar files in lib folder
 		List<String> jarFilePaths = new ArrayList<>();
-		getFilesFromExtension(libFolder, jarFilePaths, ".jar");
+		if(libFolder!=null) {
+			getFilesFromExtension(libFolder, jarFilePaths, ".jar");
+		}
 
 		//extract all .jar files from lib folder
 		jarFilePaths.parallelStream().forEach(jarPath ->
@@ -153,8 +160,10 @@ public class TestGenerationFlow {
 
 	private String extractPackagedJarToFolder(String pathToPomXML, String pathToProjectFolder, String targetFolder, String pathToWorkDir) {
 		String jarPackageName;
+		String artifactIdVersion;
 		try {
-			jarPackageName = getJarPackageNameFromPom(pathToPomXML);
+			artifactIdVersion = getProjectArtifactVersionFromPom(pathToPomXML);
+			jarPackageName = artifactIdVersion+".jar";;
 			System.out.println("jarPackageName: "+jarPackageName);
 		} catch (SAXException | IOException | ParserConfigurationException e) {
 			// TODO Auto-generated catch block
@@ -162,19 +171,33 @@ public class TestGenerationFlow {
 			e.printStackTrace();
 			return null;
 		}
-		String filePath = ProjectUtils.findFilePath(targetFolder, jarPackageName);
-		if(filePath==null) {
-			System.out.println("Could not find '"+jarPackageName+"' file in folder "+targetFolder);
+//		System.out.println("jarPackageName: "+jarPackageName);
+//		String filePath = ProjectUtils.findFilePath(targetFolder, jarPackageName);
+//		if(filePath==null) {
+//			System.out.println("Could not find '"+jarPackageName+"' file in folder "+targetFolder);
+//			return null;
+//		}
+//		System.out.println("filePath: "+filePath);
+//		return unzipPackagedJar(pathToWorkDir+File.separator+"smartCLIDE_extractedJar", filePath);
+		
+		System.out.println("artifactIdVersion: "+artifactIdVersion);
+		File[] filePaths = ProjectUtils.findFilesStartingWith(targetFolder, artifactIdVersion);
+		if(filePaths.length<=0) {
+			System.out.println("Could not find '"+artifactIdVersion+"' file in folder "+targetFolder);
 			return null;
 		}
-		System.out.println("filePath: "+filePath);
-		return unzipPackagedJar(pathToWorkDir+File.separator+"smartCLIDE_extractedJar", filePath);
+		String ret = null;
+		for(File f : filePaths) {
+			System.out.println("filePath: "+filePaths);
+			ret = unzipPackagedJar(pathToWorkDir+File.separator+"smartCLIDE_extractedJar", f.getAbsolutePath());
+		}
+		return ret;
 	}
 
 	private boolean mavenCleanPackage(String pathToProject, String pathToPomXML) throws MavenInvocationException {
 		InvocationRequest request = new DefaultInvocationRequest();
 		request.setPomFile( new File( pathToPomXML ) );
-		request.setGoals( Arrays.asList( "clean", "package" ) );
+		request.setGoals( Arrays.asList( "clean", "package", "-DskipTests") );
 
 		Invoker invoker = new DefaultInvoker();
 		invoker.setLocalRepositoryDirectory(new File(pathToProject));
@@ -220,7 +243,7 @@ public class TestGenerationFlow {
 
 	}
 
-	private String getJarPackageNameFromPom(String pathtToPomXML) throws SAXException, IOException, ParserConfigurationException {
+	private String getProjectArtifactVersionFromPom(String pathtToPomXML) throws SAXException, IOException, ParserConfigurationException {
 		String ret = null;
 
 		File file = new File(pathtToPomXML);
@@ -231,7 +254,7 @@ public class TestGenerationFlow {
 		NodeList pomProjectElements = document.getElementsByTagName("project");
 
 		if(pomProjectElements.getLength()!=1) {
-			System.out.println("***too many element woth the given name...");
+			System.out.println("***too many element with the given name...");
 			return null;
 		}
 
@@ -257,7 +280,7 @@ public class TestGenerationFlow {
 		}
 
 		if(artifactID!=null && version!=null ) {
-			ret = artifactID+"-"+version+".jar";
+			ret = artifactID+"-"+version;
 		}
 
 		return ret;
