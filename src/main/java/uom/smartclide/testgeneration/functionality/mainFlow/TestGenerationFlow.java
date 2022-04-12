@@ -90,10 +90,11 @@ public class TestGenerationFlow {
 		}
 
 		//run randoop jar for test generation
-		System.out.println("executing randoop jar");
+//		System.out.println("executing randoop jar");
+//		System.out.println("pathToRandoopJar: "+pathToRandoopJar);
 		JarExecutor test = new JarExecutor();
 		try {
-			test.execCmdCommand(pathToWorkDir, pathToWorkDir+File.separator+"smartCLIDE_workFolder;randoop-all-4.3.0.jar");
+			test.execCmdCommand(pathToWorkDir, "smartCLIDE_workFolder:randoop-all-4.3.0.jar");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();

@@ -30,6 +30,8 @@ public class MainFlow {
 		}
 
 		try {
+			System.out.println(workDirPath);
+			System.out.println(new File(workDirPath).getAbsolutePath());
 			deleteDir(new File(projectClonePath));
 			deleteDir(new File(workDirPath));
 			System.out.println("main flow executed correctly");

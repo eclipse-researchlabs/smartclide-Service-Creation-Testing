@@ -11,23 +11,16 @@ public class JarExecutor {
 	private BufferedReader op;
 	private int exitVal;
 
-	/*
-	 * java 
-	 * -classpath 
-	 * 'classesjar;classesjar\BOOT-INF\classes;installation\randoop-all-4.3.0.jar' 
-	 * randoop.main.Main 
-	 * gentests 
-	 * --classlist=list.txt 
-	 * --attempted-limit=100 
-	 * --output-limit=100 
-	 * --junit-package-name=testAll
-	 */
-
 	public void execCmdCommand(String workDir, String classPath) throws IOException, InterruptedException {
 		System.out.println("executing randoop.....");
 
+//		System.out.println("workDir: "+workDir);
+//		System.out.println("classList_randoop.txt exists?: "+new File(workDir+File.separator+"classList_randoop.txt").exists());
+//		System.out.println("classPath: "+classPath);
+//		debugUnixCommands(workDir);
+		
 		ProcessBuilder processBuilder = new ProcessBuilder( "java"
-				, "-classpath"
+				, "-cp"
 				, classPath
 				, "randoop.main.Main"
 				, "gentests"
@@ -57,4 +50,24 @@ public class JarExecutor {
 		}
 	}
 
+	private void debugUnixCommands(String workDir) throws IOException, InterruptedException {
+
+		
+		System.out.println("------------***ls<");
+		ProcessBuilder processBuilder = new ProcessBuilder( "ls"
+				, "-aR");
+		System.out.println("------------***ls>");
+
+		processBuilder.directory(new File(workDir));
+		Process p = processBuilder.start();
+
+		processBuilder.redirectErrorStream(true);
+		Process process = processBuilder.start();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		String line;
+		System.out.println();
+		while ((line = reader.readLine()) != null)
+			System.out.println(line);
+
+	}
 }
