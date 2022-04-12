@@ -34,11 +34,17 @@ import uom.smartclide.testgeneration.functionality.utils.ResultObject;
 
 public class TestGenerationFlow {
 
-	public ResultObject start(String pathToProjectFolder, String pathToWorkDir) throws MavenInvocationException, SAXException, IOException, ParserConfigurationException {
+	public ResultObject start(String pathToProjectFolder, String pathToWorkDir) {
 		String pathToPomXML = pathToProjectFolder+File.separator+"pom.xml";
 		//executing maven clean package for the cloned project
-		if(!mavenCleanPackage(pathToProjectFolder, pathToPomXML)) {
-			return new ResultObject(1, "Failde to execute 'mvn clean package'");
+		try {
+			if(!mavenCleanPackage(pathToProjectFolder, pathToPomXML)) {
+				return new ResultObject(1, "Failde to execute 'mvn clean package'");
+			}
+		} catch (MavenInvocationException e2) {
+			System.out.println(e2.getMessage());
+			return new ResultObject(1, e2.getMessage());
+			
 		}
 
 		//finding the target folder of the project
@@ -73,8 +79,15 @@ public class TestGenerationFlow {
 
 		//copy randoop jar to workfolder
 		System.out.println("locating randoop jar");
-		String pathToRandoopJar = "src"+File.separator+"main"+File.separator+"resources"+File.separator+"randoop-all-4.3.0.jar";
-		Files.copy(new File(pathToRandoopJar).toPath(), new File(pathToWorkDir+File.separator+"randoop-all-4.3.0.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+		String pathToRandoopJar = "randoop-all-4.3.0.jar";
+		//String pathToRandoopJar = "src"+File.separator+"main"+File.separator+"resources"+File.separator+"randoop-all-4.3.0.jar";
+		
+		try {
+			Files.copy(new File(pathToRandoopJar).toPath(), new File(pathToWorkDir+File.separator+"randoop-all-4.3.0.jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e1) {
+			System.out.println(e1.getMessage());
+			return new ResultObject(1, e1.getMessage());
+		}
 
 		//run randoop jar for test generation
 		System.out.println("executing randoop jar");
@@ -87,7 +100,7 @@ public class TestGenerationFlow {
 		}
 
 
-		return new ResultObject(0, "***ola kala!!!");
+		return new ResultObject(0, "***ola good!!!");
 	}
 
 	//*** finding project classfiles from targetfolder

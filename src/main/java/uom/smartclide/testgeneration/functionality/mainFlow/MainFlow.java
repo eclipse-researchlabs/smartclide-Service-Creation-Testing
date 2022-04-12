@@ -64,14 +64,12 @@ public class MainFlow {
 
 		//process for the generation of the tests
 		TestGenerationFlow genFLow = new TestGenerationFlow();
-		try {
-			genFLow.start(this.projectClonePath, workDirPath);
-			System.out.println("maven flow done....");
-		} catch (Exception e) {
-			System.out.println("exception during maven flow....");
-			System.out.println(e.getMessage());
-			return new ResultObject(1, "Could not execute the test generation flow for the project from the given URL: "+repoUrl);
+		ResultObject testGen = genFLow.start(this.projectClonePath, workDirPath);
+		if(testGen.getStatus()!=0) {
+			System.out.println("TestGenerationFlow failed");
+			return testGen;
 		}
+		System.out.println("maven flow done....");
 
 		//reset project
 		System.out.println("Attempting Repo Reset and Clean");
